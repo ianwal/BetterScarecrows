@@ -350,11 +350,12 @@ namespace Oxide.Plugins
 
         private object OnNpcTarget(BaseEntity npc, BaseEntity entity)
         {
-            // Murderer is NPCPlayerCorpse
-            if ((entity is ScarecrowNPC && npc is ScarecrowNPC) || (npc is NPCPlayerCorpse && entity is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is ScarecrowNPC))
-            {
+            // Prevent Murderers and Scarecrows from attacking each other.
+            // Note: Murderer is NPCPlayerCorpse
+            if((entity is ScarecrowNPC && npc is ScarecrowNPC) || (npc is NPCPlayerCorpse && entity is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is NPCPlayerCorpse))
+	        {
                 return true;
-            }
+            } 
 
             // ScarecrowNPC is targeted.
             if (entity is ScarecrowNPC)
