@@ -62,7 +62,7 @@ namespace Oxide.Plugins
         public class ScarecrowConfiguration
         {
             [JsonProperty("Health")]
-            public float Health = 250.0f;
+            public float Health = 75.0f;
 
             [JsonProperty("AttackRangeMultiplier")]
             public float AttackRangeMultiplier = 0.75f;
@@ -71,13 +71,13 @@ namespace Oxide.Plugins
             public float TargetLostRange = 20f;
 
             [JsonProperty("SenseRange")]
-            public float SenseRange = 15f;
+            public float SenseRange = 5f;
 
             [JsonProperty("WalkSpeedFraction")]
-            public float WalkSpeed = 0.3f;
+            public float WalkSpeed = 0.15f;
 
             [JsonProperty("RunSpeedFraction")]
-            public float RunSpeed = 1f;
+            public float RunSpeed = 0.3f;
 
             [JsonProperty("IgnoreSafeZonePlayers")]
             public bool IgnoreSafeZonePlayers = true;
@@ -105,6 +105,62 @@ namespace Oxide.Plugins
 
             [JsonProperty("UseCustomAI")]
             public bool UseCustomAI = true;
+
+            // Scarecrow Drip (clothes)
+
+            [JsonProperty(PropertyName = "Attire Headwear", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> Headwear = new List<string>() { "bucket.helmet", "burlap.headwrap", "none" };
+
+            [JsonProperty(PropertyName = "Attire Torso", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> Torso = new List<string>() { "tshirt", "jacket", "tshirt.long", "none" };
+
+            [JsonProperty(PropertyName = "Attire Legs", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> Legs = new List<string>() { "burlap.trousers", "pants.shorts" };
+
+            [JsonProperty(PropertyName = "Attire Feet", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> Feet = new List<string>() { "shoes.boots", "none" };
+
+            [JsonProperty(PropertyName = "Attire Hands", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> Hands = new List<string>() { "burlap.gloves", "none" };
+
+            [JsonProperty(PropertyName = "Skins")]
+            public Dictionary<string, List<ulong>> Skins = new Dictionary<string, List<ulong>>()
+            {
+                ["bucket.helmet"] = new List<ulong>() { 747281863, 816503044, 818863931 },
+                ["burlap.headwrap"] = new List<ulong>() { 84948907, 1076584212, 811534810 },
+                ["tshirt"] = new List<ulong>() { 811616832, 1572147878, 1120538508 },
+                ["tshirt.long"] = new List<ulong>() { 1161735516, 1537333543, 810504871 },
+                ["burlap.trousers"] = new List<ulong>() { 1177788927, 823281717, 855123887 },
+                ["pants.shorts"] = new List<ulong>() { 885479497, 841150520, 793362671 },
+                ["shoes.boots"] = new List<ulong>() { 1427198029, 1428936568, 1291665415 },
+                ["burlap.gloves"] = new List<ulong>() { 971740441, 1475175531 },
+            };
+
+            [JsonProperty(PropertyName = "Melee Weapon", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> MeleeWeapon = new List<string>() { "hatchet", "knife.bone", "knife.butcher", "knife.combat", "longsword", "machete", "paddle", "salvaged.cleaver", "salvaged.sword" };
+
+            [JsonProperty(PropertyName = "Glowing Eyes (Scarecrow)")]
+            public bool GlowingScarecrowEyes = true;
+
+            [JsonProperty(PropertyName = "Attire Headwear (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowHeadwear = new List<string>() { };
+
+            [JsonProperty(PropertyName = "Attire Torso (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowTorso = new List<string>() { "scarecrow.suit" };
+
+            [JsonProperty(PropertyName = "Attire Legs (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowLegs = new List<string>() { };
+
+            [JsonProperty(PropertyName = "Attire Feet (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowFeet = new List<string>() { };
+
+            [JsonProperty(PropertyName = "Attire Hands (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowHands = new List<string>() { };
+
+            [JsonProperty(PropertyName = "Melee Weapon (Scarecrow)", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<string> ScarecrowMeleeWeapon = new List<string>() { };
+
+
 
             public Sounds Sounds = new Sounds();
 
@@ -227,6 +283,13 @@ namespace Oxide.Plugins
             {
                 NextTick(() =>
                 {
+                    var combatEntity = entity as BaseCombatEntity;
+                    if (combatEntity.ShortPrefabName == "scarecrow")
+                    {
+                        ClotheScarecrow(entity);
+
+                    }
+
                     if (entity.Brain != null)
                     {
                         UpdateScarecrowConfiguration(entity, false);
@@ -235,6 +298,36 @@ namespace Oxide.Plugins
             }
         }
 
+        void ClotheScarecrow(ScarecrowNPC scarecrow)
+        {
+            var inv_wear = scarecrow.inventory.containerWear;
+            var inv_belt = scarecrow.inventory.containerBelt;
+
+            Item gloweyes = ItemManager.CreateByName("gloweyes");
+
+            Item itemHeadwear = GetRandomItem(_config.ScarecrowHeadwear);
+            Item itemTorso = GetRandomItem(_config.ScarecrowTorso);
+            Item itemLegs = GetRandomItem(_config.ScarecrowLegs);
+            Item itemFeet = GetRandomItem(_config.ScarecrowFeet);
+            Item itemHands = GetRandomItem(_config.ScarecrowHands);
+
+            inv_wear.Clear();
+            if (_config.GlowingScarecrowEyes) gloweyes.MoveToContainer(inv_wear);
+            if (itemHeadwear != null) itemHeadwear.MoveToContainer(inv_wear);
+            if (itemTorso != null) itemTorso.MoveToContainer(inv_wear);
+            if (itemLegs != null) itemLegs.MoveToContainer(inv_wear);
+            if (itemFeet != null) itemFeet.MoveToContainer(inv_wear);
+            if (itemHands != null) itemHands.MoveToContainer(inv_wear);
+
+            Item itemMelee = GetRandomItem(_config.ScarecrowMeleeWeapon);
+
+            if (itemMelee != null)
+            {
+                inv_belt.Clear();
+                itemMelee.MoveToContainer(inv_belt);
+            }
+
+        }
 
         private void OnEntityDeath(ScarecrowNPC entity)
         {
@@ -257,12 +350,11 @@ namespace Oxide.Plugins
 
         private object OnNpcTarget(BaseEntity npc, BaseEntity entity)
         {
-            // Prevent Murderers and Scarecrows from attacking each other.
-            // Note: Murderer is NPCPlayerCorpse
-            if((entity is ScarecrowNPC && npc is ScarecrowNPC) || (npc is NPCPlayerCorpse && entity is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is NPCPlayerCorpse))
-	        {
+            // Murderer is NPCPlayerCorpse
+            if ((entity is ScarecrowNPC && npc is ScarecrowNPC) || (npc is NPCPlayerCorpse && entity is ScarecrowNPC) || (entity is NPCPlayerCorpse && npc is ScarecrowNPC))
+            {
                 return true;
-            } 
+            }
 
             // ScarecrowNPC is targeted.
             if (entity is ScarecrowNPC)
@@ -365,6 +457,44 @@ namespace Oxide.Plugins
                 }
             }
             entity.Brain.LoadAIDesignAtIndex(entity.Brain.LoadedDesignIndex());
+        }
+
+        private ulong GetSkinId(List<ulong> Skins)
+        {
+            int index = Core.Random.Range(0, Skins.Count - 1);
+            ulong skinId = (ulong)Skins[index];
+            return skinId;
+        }
+
+        private Item GetRandomItem(List<string> ClothingItems)
+        {
+            if (ClothingItems.Count < 1)
+            {
+                return null;
+            }
+            int index = Core.Random.Range(0, ClothingItems.Count - 1);
+            if (ClothingItems[index] == "none")
+            {
+                return null;
+            }
+
+            var chosenItem = ClothingItems[index];
+
+            List<ulong> skinList;
+            Item SelectedItem;
+
+            bool skinsDefined = _config.Skins.TryGetValue(chosenItem, out skinList);
+
+            if (skinsDefined && skinList.Count > 0)
+            {
+                SelectedItem = ItemManager.CreateByName(chosenItem, 1, GetSkinId(skinList));
+            }
+            else
+            {
+                SelectedItem = ItemManager.CreateByName(chosenItem, 1);
+            }
+
+            return SelectedItem;
         }
 
         #endregion
